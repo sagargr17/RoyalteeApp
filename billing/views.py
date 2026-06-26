@@ -1,3 +1,11 @@
-from django.shortcuts import render
+# billing/views.py
+from rest_framework import viewsets
+from .models import Invoice
+from .serializers import InvoiceSerializer
 
-# Create your views here.
+
+class InvoiceViewSet(viewsets.ModelViewSet):
+    queryset = Invoice.objects.all()  # automatically scoped to current schema
+    serializer_class = InvoiceSerializer
+    
+    

@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_tenants',
     'tenants',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,28 +43,29 @@ INSTALLED_APPS = [
     'config',
     'billing',
     'root',
+   
     
 ]
 
 
-TENANT_APPS = [
-    # apps that live INSIDE each tenant's schema
-    'django.contrib.auth',
-    'billing',
-    'core',
-]
-
 SHARED_APPS = [
-    # apps that live in the PUBLIC schema only
     'django_tenants',
     'tenants',
     'django.contrib.contenttypes',
 ]
 
+TENANT_APPS = [
+    # apps that live INSIDE each tenant's schema
+    'django.contrib.auth',
+    'billing',
+    'root',
+]
 
 DATABASE_ROUTERS = (
     'django_tenants.routers.TenantSyncRouter',
 )
+
+
 
 TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
@@ -152,3 +154,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',   # ← gives you the testable HTML UI
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # needed for browsable UI login
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+
+ROOT_URLCONF = 'config.urls'          
+PUBLIC_SCHEMA_URLCONF = 'config.urls' 
+TENANT_URLCONF = 'config.urls_tenants'
