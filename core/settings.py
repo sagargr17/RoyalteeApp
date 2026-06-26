@@ -172,5 +172,5 @@ REST_FRAMEWORK = {
 
 
 ROOT_URLCONF = 'config.urls'          
-PUBLIC_SCHEMA_URLCONF = 'config.urls' 
+PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
 TENANT_URLCONF = 'config.urls_tenants'
