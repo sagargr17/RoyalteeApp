@@ -52,6 +52,11 @@ SHARED_APPS = [
     'django_tenants',
     'tenants',
     'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'django.contrib.auth',        
+    'django.contrib.admin',       
+    'django.contrib.sessions',    
+    'django.contrib.messages',
 ]
 
 TENANT_APPS = [
@@ -59,6 +64,12 @@ TENANT_APPS = [
     'django.contrib.auth',
     'billing',
     'root',
+     'django.contrib.contenttypes',
+    'django.contrib.staticfiles',
+    'django.contrib.auth',        
+    'django.contrib.admin',       
+    'django.contrib.sessions',    
+    'django.contrib.messages',
 ]
 
 DATABASE_ROUTERS = (
@@ -118,7 +129,7 @@ DATABASES = {
     }
 }
 
-
+"""  """
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
