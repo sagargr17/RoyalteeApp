@@ -1,10 +1,11 @@
 # billing/models.py
+
 from django.db import models
 import uuid
 
 
 class Customer(models.Model):
-    customer_code = models.CharField(max_length=20, unique=True, editable=False, blank=True )
+    customer_code = models.CharField(max_length=20, unique=True, editable=False, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -26,8 +27,8 @@ class Customer(models.Model):
         return f"{self.customer_code} — {self.name}"
 
 
-class Invoice(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='invoices')
+class Invoice(models.Model):    
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='invoices')
     customer_name = models.CharField(max_length=100)  # kept for backward compatibility, see note below
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

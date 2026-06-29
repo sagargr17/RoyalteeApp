@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = [   
     'django_tenants',
     'tenants',
     'django.contrib.admin',
@@ -64,9 +64,9 @@ TENANT_APPS = [
     'django.contrib.auth',
     'billing',
     'root',
-     'django.contrib.contenttypes',
+    'django.contrib.contenttypes',
     'django.contrib.staticfiles',
-    'django.contrib.auth',        
+    'django.contrib.auth',     
     'django.contrib.admin',       
     'django.contrib.sessions',    
     'django.contrib.messages',
@@ -80,7 +80,6 @@ DATABASE_ROUTERS = (
 
 TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
-
 
 
 MIDDLEWARE = [
@@ -185,3 +184,16 @@ REST_FRAMEWORK = {
 ROOT_URLCONF = 'config.urls'          
 PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
 TENANT_URLCONF = 'config.urls_tenants'
+
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://*.localhost:8000',
+    'http://localhost:8000',
+    'http://admin.localhost:8000',
+]
+
+
+
+CSRF_COOKIE_DOMAIN = '.localhost.com'   # leading dot = shared across all subdomains
+SESSION_COOKIE_DOMAIN = '.localhost.com'
