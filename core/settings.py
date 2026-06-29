@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-94tc6dcq&_rdp*#)07%1r3ejh#)=gw47p=tu$7qqb@58ug)34^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -49,25 +49,24 @@ INSTALLED_APPS = [
 
 
 SHARED_APPS = [
+    'django.contrib.auth',        
     'django_tenants',
     'tenants',
+    'django.contrib.admin',       
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
-    'django.contrib.auth',        
-    'django.contrib.admin',       
     'django.contrib.sessions',    
     'django.contrib.messages',
 ]
 
 TENANT_APPS = [
     # apps that live INSIDE each tenant's schema
-    'django.contrib.auth',
+    'django.contrib.auth',     
     'billing',
     'root',
+    'django.contrib.admin',       
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
-    'django.contrib.auth',     
-    'django.contrib.admin',       
     'django.contrib.sessions',    
     'django.contrib.messages',
 ]
@@ -178,6 +177,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/min',
+    },
 }
 
 
@@ -186,14 +191,16 @@ PUBLIC_SCHEMA_URLCONF = 'config.urls_public'
 TENANT_URLCONF = 'config.urls_tenants'
 
 
-
 CSRF_TRUSTED_ORIGINS = [
-    'http://*.localhost:8000',
+    'https://localhost.com',
+    'https://*.localhost.com',
+    'http://127.0.0.1:8000',
     'http://localhost:8000',
-    'http://admin.localhost:8000',
+    'http://*.localhost:8000',     
+    'http://.localhost:8000',    
 ]
 
 
 
-CSRF_COOKIE_DOMAIN = '.localhost.com'   # leading dot = shared across all subdomains
-SESSION_COOKIE_DOMAIN = '.localhost.com'
+SESSION_COOKIE_DOMAIN = None   # let the browser handle it per-subdomain automatically
+CSRF_COOKIE_DOMAIN = None

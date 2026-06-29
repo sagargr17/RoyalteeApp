@@ -112,11 +112,12 @@ class ClientAdmin(admin.ModelAdmin):
         if not change:  # only on CREATE, not when editing an existing tenant
             # Auto-create the domain
             Domain.objects.create(
-                domain=f"{obj.schema_name}.yourapp.com",
+                domain=f"{obj.schema_name}.localhost",
                 tenant=obj,
                 is_primary=True,
             )
 
+            print(form.cleaned_data['admin_email'])
             # Create the first user, inside the new tenant's schema —
             # staff but NOT superuser, so we can scope their permissions
             with schema_context(obj.schema_name):
