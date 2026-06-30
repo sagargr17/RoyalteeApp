@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'config',
     'billing',
-    'root',
+    
    
     
 ]
@@ -63,7 +63,6 @@ TENANT_APPS = [
     # apps that live INSIDE each tenant's schema
     'django.contrib.auth',     
     'billing',
-    'root',
     'django.contrib.admin',       
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
@@ -204,3 +203,9 @@ CSRF_TRUSTED_ORIGINS = [
 
 SESSION_COOKIE_DOMAIN = None   # let the browser handle it per-subdomain automatically
 CSRF_COOKIE_DOMAIN = None
+
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -1,77 +1,3 @@
-# # tenants/admin.py
-# from django import forms
-# from django.contrib import admin
-# from django.contrib.auth import get_user_model
-# from django_tenants.utils import schema_context
-# from .models import Client, Domain
-# from django.db import connection
-
-
-# class ClientAdminForm(forms.ModelForm):
-#     admin_email = forms.EmailField(
-#         label="Tenant admin email",
-#         help_text="Login email for this tenant's first user"
-#     )
-#     admin_password = forms.CharField(
-#         label="Tenant admin password",
-#         widget=forms.PasswordInput,
-#         help_text="They can change this after first login"
-#     )
-
-#     class Meta:
-#         model = Client
-#         fields = ['schema_name', 'name', 'plan']
-
-
-# @admin.register(Client)
-# class ClientAdmin(admin.ModelAdmin):
-#     form = ClientAdminForm
-#     list_display = ('schema_name', 'name', 'plan', 'created_on', 'is_active')
-#     list_editable = ('plan', 'is_active')
-#     search_fields = ('name', 'schema_name')
-
-#     def save_model(self, request, obj, form, change):
-#         super().save_model(request, obj, form, change)  # saves Client → triggers auto_create_schema
-
-#         if not change:  # only on CREATE, not when editing an existing tenant
-#             # Auto-create the domain
-#             Domain.objects.create(
-#                 domain=f"{obj.schema_name}.yourapp.com",
-#                 tenant=obj,
-#                 is_primary=True,
-#             )
-
-#             # Create the first user, inside the new tenant's schema
-#             with schema_context(obj.schema_name):
-#                 User = get_user_model()
-#                 User.objects.create_superuser(
-#                     username=form.cleaned_data['admin_email'],
-#                     email=form.cleaned_data['admin_email'],
-#                     password=form.cleaned_data['admin_password'],
-#                 )
-                
-                
-#     def has_module_permission(self, request):
-#         # Only show this in the public schema — hide entirely on tenant schemas
-#         return connection.schema_name == 'public'
-
-#     def has_view_permission(self, request, obj=None):
-#         return connection.schema_name == 'public'
-
-#     def has_add_permission(self, request):
-#         return connection.schema_name == 'public'
-
-#     def has_change_permission(self, request, obj=None):
-#         return connection.schema_name == 'public'
-
-#     def has_delete_permission(self, request, obj=None):
-#         return connection.schema_name == 'public'
-
-
-# @admin.register(Domain)
-# class DomainAdmin(admin.ModelAdmin):
-#     list_display = ('domain', 'tenant', 'is_primary')
-    
 # tenants/admin.py
 from django import forms
 from django.contrib import admin
@@ -123,7 +49,7 @@ class ClientAdmin(admin.ModelAdmin):
             with schema_context(obj.schema_name):
                 User = get_user_model()
                 user = User.objects.create_user(
-                    username=form.cleaned_data['admin_email'],
+                    username=form.cleaned_data['admin_email'].split("@")[0],
                     email=form.cleaned_data['admin_email'],
                     password=form.cleaned_data['admin_password'],
                     is_staff=True,

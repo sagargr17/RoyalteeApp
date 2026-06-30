@@ -12,30 +12,58 @@ class Customer(models.Model):
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)  # no longer required for auth
     created_at = models.DateTimeField(auto_now_add=True)
+    qr_code = models.ImageField(upload_to='customer_qr/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.customer_code:
             self.customer_code = self.generate_customer_code()
+        if not self.access_pin:
+            self.access_pin = self.generate_access_pin()
         super().save(*args, **kwargs)
+        # generate QR after save so we have a pk and customer_code
+        if not self.qr_code:
+            self.generate_and_save_qr()
 
     def generate_customer_code(self):
         while True:
             code = f"CUST-{uuid.uuid4().hex[:6].upper()}"
             if not Customer.objects.filter(customer_code=code).exists():
                 return code
-                
+
     def generate_access_pin(self):
         while True:
-            pin = str(random.randint(1000, 9999))  # 4-digit PIN
+            pin = str(random.randint(1000, 9999))
             if not Customer.objects.filter(access_pin=pin).exists():
                 return pin
 
-    def __str__(self):
-        return f"{self.customer_code} — {self.name}"                
+    def generate_and_save_qr(self):
+        try:
+            import qrcode
+            from io import BytesIO
+            from django.core.files.base import ContentFile
+            from django.db import connection
+
+            schema = connection.schema_name
+            url = f"http://{schema}.localhost:8000/verify/?c={self.customer_code}"
+
+            qr = qrcode.make(url)
+            print(qr)
+            buffer = BytesIO()
+            qr.save(buffer, format='PNG')
+            buffer.seek(0)
+
+            filename = f"qr_{self.customer_code}.png"
+            # use update to avoid recursive save() call
+            Customer.objects.filter(pk=self.pk).update(
+                qr_code=ContentFile(buffer.getvalue(), name=filename)
+            )
+            self.refresh_from_db()
+        except Exception as e:
+            print(f"QR generation failed: {e}")
 
     def __str__(self):
         return f"{self.customer_code} — {self.name}"
-
+            
 
 
 
