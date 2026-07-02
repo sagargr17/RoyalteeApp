@@ -12,7 +12,7 @@ class Customer(models.Model):
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)  # no longer required for auth
     created_at = models.DateTimeField(auto_now_add=True)
-    qr_code = models.ImageField(upload_to='customer_qr/', blank=True, null=True)
+    qr_code = models.ImageField(upload_to='', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.customer_code:
@@ -41,29 +41,24 @@ class Customer(models.Model):
             import qrcode
             from io import BytesIO
             from django.core.files.base import ContentFile
-            from django.db import connection
 
-            schema = connection.schema_name
-            url = f"http://{schema}.localhost:8000/verify/?c={self.customer_code}"
-
+            url = f"http://localhost:8000/verify/?c={self.customer_code}"
             qr = qrcode.make(url)
-            print(qr)
+
             buffer = BytesIO()
             qr.save(buffer, format='PNG')
             buffer.seek(0)
 
             filename = f"qr_{self.customer_code}.png"
-            # use update to avoid recursive save() call
-            Customer.objects.filter(pk=self.pk).update(
-                qr_code=ContentFile(buffer.getvalue(), name=filename)
-            )
-            self.refresh_from_db()
+
+            # This properly writes the file to storage AND updates self.qr_code.name
+            self.qr_code.save(filename, ContentFile(buffer.getvalue()), save=False)
+
+            # Now persist just that field to the DB (avoids recursive full save())
+            Customer.objects.filter(pk=self.pk).update(qr_code=self.qr_code.name)
+
         except Exception as e:
             print(f"QR generation failed: {e}")
-
-    def __str__(self):
-        return f"{self.customer_code} — {self.name}"
-            
 
 
 
