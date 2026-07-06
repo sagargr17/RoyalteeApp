@@ -76,8 +76,6 @@ DATABASE_ROUTERS = (
 
 
 
-TENANT_MODEL = "tenants.Client"
-TENANT_DOMAIN_MODEL = "tenants.Domain"
 
 
 MIDDLEWARE = [
@@ -91,7 +89,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls'
+
 
 TEMPLATES = [
     {
@@ -185,11 +183,6 @@ REST_FRAMEWORK = {
 }
 
 
-ROOT_URLCONF = 'config.urls'          
-PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
-TENANT_URLCONF = 'config.urls_tenants'
-
-
 CSRF_TRUSTED_ORIGINS = [
     'https://localhost.com',
     'https://*.localhost.com',
@@ -201,11 +194,21 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 
-SESSION_COOKIE_DOMAIN = None   # let the browser handle it per-subdomain automatically
-CSRF_COOKIE_DOMAIN = None
-
-
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+TENANT_MODEL = "tenants.Client"
+TENANT_DOMAIN_MODEL = "tenants.Domain"
+
+
+ROOT_URLCONF = 'config.urls_public'          
+PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
+TENANT_URLCONF = 'config.urls_tenants'
+
+
+
+
+SESSION_COOKIE_DOMAIN = None   # let the browser handle it per-subdomain automatically
+CSRF_COOKIE_DOMAIN = None

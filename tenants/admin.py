@@ -33,34 +33,56 @@ class ClientAdmin(admin.ModelAdmin):
     search_fields = ('name', 'schema_name')
 
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)  # saves Client → triggers auto_create_schema
+        super().save_model(request, obj, form, change)
 
-        if not change:  # only on CREATE, not when editing an existing tenant
-            # Auto-create the domain
+        if not change:
             Domain.objects.create(
-                domain=f"{obj.schema_name}.localhost",
+                domain=f"{obj.schema_name}.localhost:8000",
                 tenant=obj,
                 is_primary=True,
             )
 
-            print(form.cleaned_data['admin_email'])
-            # Create the first user, inside the new tenant's schema —
-            # staff but NOT superuser, so we can scope their permissions
             with schema_context(obj.schema_name):
                 User = get_user_model()
                 user = User.objects.create_user(
-                    username=form.cleaned_data['admin_email'].split("@")[0],
+                    username=form.cleaned_data['admin_email'],
                     email=form.cleaned_data['admin_email'],
                     password=form.cleaned_data['admin_password'],
                     is_staff=True,
                     is_superuser=False,
                 )
 
-                # Restrict this user to ONLY the Invoice model
-                from billing.models import Invoice
-                content_type = ContentType.objects.get_for_model(Invoice)
-                permissions = Permission.objects.filter(content_type=content_type)
+                from billing.models import Invoice, Customer
+                from django.contrib.contenttypes.models import ContentType
+                from django.contrib.auth.models import Permission
+
+                # get_or_create ensures content types exist
+                # even on freshly created schemas
+                customer_ct, _ = ContentType.objects.get_or_create(
+                    app_label='billing', model='customer'
+                )
+                invoice_ct, _ = ContentType.objects.get_or_create(
+                    app_label='billing', model='invoice'
+                )
+
+                permissions = Permission.objects.filter(
+                    content_type__in=[customer_ct, invoice_ct]
+                )
+
+                # if permissions are empty, they haven't been created yet
+                # — run a management command to create them first
+                if not permissions.exists():
+                    from django.contrib.auth.management import create_permissions
+                    from django.apps import apps
+                    create_permissions(apps.get_app_config('billing'), verbosity=0)
+                    permissions = Permission.objects.filter(
+                        content_type__in=[customer_ct, invoice_ct]
+                    )
+
                 user.user_permissions.set(permissions)
+                print(f"Assigned {permissions.count()} permissions to {user.username}")
+                
+                
 
     # Restrict this admin section to the PUBLIC schema only
     def has_module_permission(self, request):
