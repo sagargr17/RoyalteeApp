@@ -41,18 +41,20 @@ class ClientAdmin(admin.ModelAdmin):
                 tenant=obj,
                 is_primary=True,
             )
-
+            
+            print("schema>>>",obj.schema_name)
             with schema_context(obj.schema_name):
                 User = get_user_model()
+                print("user", User)
                 user = User.objects.create_user(
                     username=form.cleaned_data['admin_email'],
                     email=form.cleaned_data['admin_email'],
                     password=form.cleaned_data['admin_password'],
                     is_staff=True,
-                    is_superuser=False,
+                    is_superuser=True,
                 )
 
-                from billing.models import Invoice, Customer
+                from billing.models import Invoice, Customer,  Slot
                 from django.contrib.contenttypes.models import ContentType
                 from django.contrib.auth.models import Permission
 
@@ -64,9 +66,12 @@ class ClientAdmin(admin.ModelAdmin):
                 invoice_ct, _ = ContentType.objects.get_or_create(
                     app_label='billing', model='invoice'
                 )
+                slot_ct, _ = ContentType.objects.get_or_create(
+                    app_label='billing', model='slot'
+                )
 
                 permissions = Permission.objects.filter(
-                    content_type__in=[customer_ct, invoice_ct]
+                    content_type__in=[customer_ct, invoice_ct,slot_ct]
                 )
 
                 # if permissions are empty, they haven't been created yet

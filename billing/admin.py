@@ -1,18 +1,25 @@
 # billing/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Customer, Invoice
+from .models import Customer, Invoice, Slot
 
 
+@admin.register(Slot)
+class SlotAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'start_time', 'end_time', 'status', 'booked_by')
+    list_filter = ('status', 'date')
+    search_fields = ('title',)
+    list_editable = ('status',)
+    readonly_fields = ('booked_by',)
+    ordering = ('date', 'start_time')
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer', 'amount', 'created_at')
+    list_display = ('id', 'customer', 'slot', 'amount', 'created_at')
     autocomplete_fields = ['customer']
     search_fields = ('customer__name', 'customer__customer_code')
-
-
+    list_filter = ('created_at',)
 
 
 @admin.register(Customer)
@@ -22,7 +29,6 @@ class CustomerAdmin(admin.ModelAdmin):
     search_fields = ('customer_code', 'name', 'email')
 
     def qr_preview(self, obj):
-        # safely check if field exists and has a value
         if obj.qr_code and hasattr(obj.qr_code, 'url'):
             try:
                 return format_html('<img src="{}" width="40" />', obj.qr_code.url)
