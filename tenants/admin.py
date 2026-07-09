@@ -2,11 +2,13 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
+# from django.contrib.auth.models import Permission
+# from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django_tenants.utils import schema_context
 from .models import Client, Domain
+from django_tenants.utils import get_public_schema_name
+from unfold.admin import ModelAdmin # Import Unfold's class
 
 
 class ClientAdminForm(forms.ModelForm):
@@ -26,7 +28,7 @@ class ClientAdminForm(forms.ModelForm):
 
 
 @admin.register(Client)
-class ClientAdmin(admin.ModelAdmin):
+class ClientAdmin(ModelAdmin):
     form = ClientAdminForm
     list_display = ('schema_name', 'name', 'plan', 'created_on', 'is_active')
     list_editable = ('plan', 'is_active')
@@ -104,10 +106,20 @@ class ClientAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return connection.schema_name == 'public'
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevents deletion if the object matches the public schema name
+        if obj and obj.schema_name == get_public_schema_name():
+            return False
+        return super().has_delete_permission(request, obj)
+    
+    
+    
+    
 
 
 @admin.register(Domain)
-class DomainAdmin(admin.ModelAdmin):
+class DomainAdmin(ModelAdmin):
     list_display = ('domain', 'tenant', 'is_primary')
 
     # Same restriction — Domain is also a public-only model

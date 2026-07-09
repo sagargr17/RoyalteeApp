@@ -11,6 +11,10 @@ router.register('invoices', InvoiceViewSet, basename='invoice')
 urlpatterns = [
     path('pin/verify/', VerifyPinView.as_view()),
     path('my-invoices/', MyInvoicesView.as_view()),
+    
+    
+    
+    
 ] + router.urls
 
 
