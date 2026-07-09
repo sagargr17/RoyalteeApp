@@ -10,6 +10,9 @@ from .models import Customer, Invoice, Slot
 from .serializers import CustomerSerializer, InvoiceSerializer, SlotSerializer
 
 
+
+
+
 class SlotViewSet(viewsets.ModelViewSet):
     serializer_class = SlotSerializer
 
@@ -79,7 +82,7 @@ class VerifyPinView(APIView):
 
 class MyInvoicesView(APIView):
     """Customer-facing — returns invoice count, details, and current slot booking"""
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         token = request.auth

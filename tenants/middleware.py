@@ -11,10 +11,11 @@ class HeaderTenantMiddleware:
 
     def __call__(self, request):
         tenant_id = request.headers.get('X-Tenant-ID')
+        
+        print("tenant-id",tenant_id)
 
         if not tenant_id:
             return JsonResponse({'error': 'X-Tenant-ID header required'}, status=400)
-
         TenantModel = get_tenant_model()
         try:
             tenant = TenantModel.objects.get(schema_name=tenant_id)

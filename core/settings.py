@@ -68,6 +68,7 @@ SHARED_APPS = [
 TENANT_APPS = [
     # apps that live INSIDE each tenant's schema
     'django.contrib.auth',     
+    'rest_framework',
     'billing',
     'django.contrib.admin',       
     'django.contrib.contenttypes',
@@ -186,6 +187,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/min',
     },
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer', # ← This must be present
+    ],
 }
 
 
@@ -213,53 +218,21 @@ ROOT_URLCONF = 'config.urls_public'
 PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
 TENANT_URLCONF = 'config.urls_tenants'
 
+TENANT_SCHEMA_URLCONF = 'config.urls_tenants'  # ← This file manages tenant APIs
+
+MULTITENANT_RELATIVE_URL_CONF = True
+TENANT_LIMIT_SET_URLCONF = True
+
 
 SESSION_COOKIE_DOMAIN = None   # let the browser handle it per-subdomain automatically
 CSRF_COOKIE_DOMAIN = None
 
-# settings.py
+from django.utils.translation import gettext_lazy as _
 
-# UNFOLD = {
-#     "SIDEBAR": {
-#         "show_search": True,
-#         "navigation": [
-#             {
-#                 "title": "Tenant Management (Public Only)",
-#                 "separator": True,
-#                 "items": [
-#                     {
-#                         "title": "Clients",
-#                         "icon": "business",
-#                         "link": "admin:tenants_client_changelist",
-#                     },
-#                     {
-#                         "title": "Domains",
-#                         "icon": "language",
-#                         "link": "admin:tenants_domain_changelist",
-#                     },
-#                 ],
-#             },
-#             # {
-#             #     "title": "Billing & Apps (Tenant Only)",
-#             #     "separator": True,
-#             #     "items": [
-#             #         {
-#             #             "title": "Customers",
-#             #             "icon": "group",
-#             #             "link": "admin:billing_customer_changelist",
-#             #         },
-#             #         {
-#             #             "title": "Invoices",
-#             #             "icon": "receipt",
-#             #             "link": "admin:billing_invoice_changelist",
-#             #         },
-#             #         {
-#             #             "title": "Slots",
-#             #             "icon": "schedule",
-#             #             "link": "admin:billing_slot_changelist",
-#             #         },
-#             #     ],
-#             # },
-#         ],
-#     },
-# }
+UNFOLD = {
+    "SITE_HEADER": _("Control Panel"),       # Replaces "Django administration" text in the sidebar
+    "SITE_SUBHEADER": _("PS Group"),      # Optional: text beneath the header
+    "SITE_TITLE": _("Your Site Admin Suffix"),         # Replaces the HTML browser <title> suffix
+}
+
+
