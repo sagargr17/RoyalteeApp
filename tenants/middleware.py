@@ -10,9 +10,11 @@ class HeaderTenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        
+        print(request)
         tenant_id = request.headers.get('X-Tenant-ID')
         
-        print("tenant-id",tenant_id)
+        tenant_id = 'edric'
 
         if not tenant_id:
             return JsonResponse({'error': 'X-Tenant-ID header required'}, status=400)
@@ -23,11 +25,11 @@ class HeaderTenantMiddleware:
             return JsonResponse({'error': 'Invalid tenant'}, status=404)
 
         connection.set_tenant(tenant)  # 🔑 this switches the Postgres schema
-        request.tenant = tenant
+        request.tenant = tenant    
 
         response = self.get_response(request)
-        connection.set_schema_to_public()  # reset after request
+        connection.set_schema_to_public() 
         return response
     
     
-    
+

@@ -30,6 +30,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [   
+
     "unfold",  # before django.contrib.admin
     "unfold.contrib.filters",  # optional, if special filters are needed
     "unfold.contrib.forms",  # optional, if special form elements are needed
@@ -86,7 +87,10 @@ DATABASE_ROUTERS = (
 
 
 MIDDLEWARE = [
+    
     'django_tenants.middleware.main.TenantMainMiddleware',
+    'tenants.middleware.HeaderTenantMiddleware',      
+    'tenants.middleware.TestingMiddleWare',      
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -214,9 +218,10 @@ TENANT_MODEL = "tenants.Client"
 TENANT_DOMAIN_MODEL = "tenants.Domain"
 
 
-ROOT_URLCONF = 'config.urls_public'          
+ROOT_URLCONF = 'config.urls_tenants'          
 PUBLIC_SCHEMA_URLCONF = 'config.urls_public' 
 TENANT_URLCONF = 'config.urls_tenants'
+
 
 TENANT_SCHEMA_URLCONF = 'config.urls_tenants'  # ← This file manages tenant APIs
 
@@ -230,9 +235,10 @@ CSRF_COOKIE_DOMAIN = None
 from django.utils.translation import gettext_lazy as _
 
 UNFOLD = {
-    "SITE_HEADER": _("Control Panel"),       # Replaces "Django administration" text in the sidebar
-    "SITE_SUBHEADER": _("PS Group"),      # Optional: text beneath the header
-    "SITE_TITLE": _("Your Site Admin Suffix"),         # Replaces the HTML browser <title> suffix
+    "SITE_HEADER": _("Control Panel"),      
+    "SITE_SUBHEADER": _("PS Group"),    
+    "SITE_TITLE": _("Control Panel"),   
 }
 
 
+LOGIN_REDIRECT_URL = '/'

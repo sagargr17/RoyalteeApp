@@ -1,6 +1,6 @@
 import requests
 
-url = "http://edric.localhost:8000.com/my-invoices/"
+url = "http://edric.localhost:8000.com/api/my-invoices/"
 headers = {
     "Content-Type": "application/json",
     # "Authorization": "Bearer YOUR_ACCESS_TOKEN_HERE"  
@@ -8,6 +8,9 @@ headers = {
 data = {
     "pin": "1234"
 }
+
+
+
 
 response = requests.post(url, json=data, headers=headers)
 print("Status Code:", response.status_code)

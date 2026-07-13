@@ -6,6 +6,10 @@ from django.contrib import admin
 
 
 
+print("hitttinggg... public")
+
 urlpatterns = [
     path('admin/', admin.site.urls),  # this becomes admin.yourapp.com/admin    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
