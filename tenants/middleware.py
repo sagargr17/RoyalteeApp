@@ -1,8 +1,6 @@
 # tenants/middleware.py
-from django.db import connection
-from django_tenants.utils import get_tenant_model, get_public_schema_name
 from django.http import JsonResponse
-
+from django_tenants.utils import get_tenant_model
 
 
 class HeaderTenantMiddleware:
@@ -10,26 +8,27 @@ class HeaderTenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        
-        print(request)
-        tenant_id = request.headers.get('X-Tenant-ID')
-        
-        tenant_id = 'edric'
+        # TenantMainMiddleware already resolved tenant via subdomain
+        # skip entirely — no header needed
+        if hasattr(request, 'tenant'):
+            return self.get_response(request)
 
+        # fallback: try header (only for direct IP/API access)
+        tenant_id = request.headers.get('X-Tenant-ID')
         if not tenant_id:
-            return JsonResponse({'error': 'X-Tenant-ID header required'}, status=400)
+            # no subdomain match AND no header — pass through
+            # let Django handle it (will 404 or hit public urls)
+            return self.get_response(request)
+
         TenantModel = get_tenant_model()
+        
         try:
+            from django.db import connection
+            print(tenant_id)
             tenant = TenantModel.objects.get(schema_name=tenant_id)
+            connection.set_tenant(tenant)
+            request.tenant = tenant
         except TenantModel.DoesNotExist:
             return JsonResponse({'error': 'Invalid tenant'}, status=404)
 
-        connection.set_tenant(tenant)  # 🔑 this switches the Postgres schema
-        request.tenant = tenant    
-
-        response = self.get_response(request)
-        connection.set_schema_to_public() 
-        return response
-    
-    
-
+        return self.get_response(request)
