@@ -71,9 +71,10 @@ class ClientAdmin(ModelAdmin):
                 slot_ct, _ = ContentType.objects.get_or_create(
                     app_label='billing', model='slot'
                 )
+                booking_ct, _ = ContentType.objects.get_or_create(app_label='billing', model='booking')
 
                 permissions = Permission.objects.filter(
-                    content_type__in=[customer_ct, invoice_ct,slot_ct]
+                    content_type__in=[customer_ct, invoice_ct,slot_ct,booking_ct]
                 )
 
                 # if permissions are empty, they haven't been created yet
@@ -83,7 +84,7 @@ class ClientAdmin(ModelAdmin):
                     from django.apps import apps
                     create_permissions(apps.get_app_config('billing'), verbosity=0)
                     permissions = Permission.objects.filter(
-                        content_type__in=[customer_ct, invoice_ct]
+                        content_type__in=[customer_ct, invoice_ct, booking_ct]
                     )
 
                 user.user_permissions.set(permissions)

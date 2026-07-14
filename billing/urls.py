@@ -13,7 +13,7 @@ from django.contrib import admin
 
 urlpatterns = [
     path('pin/verify/', VerifyPinView.as_view()),
-    path('myinvoices/', MyInvoicesView.as_view()),
+    path('my-invoices/', MyInvoicesView.as_view()),
     path('availableslots/', AvailableSlotsView.as_view()),
     path('bookslot/', BookSlotView.as_view()), 
-] + router.urls 
+] + router.urls  

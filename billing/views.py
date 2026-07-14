@@ -11,8 +11,6 @@ from .serializers import CustomerSerializer, InvoiceSerializer, SlotSerializer
 
 
 
-
-
 class SlotViewSet(viewsets.ModelViewSet):
     serializer_class = SlotSerializer
 
@@ -82,7 +80,7 @@ class VerifyPinView(APIView):
 
 class MyInvoicesView(APIView):
     """Customer-facing — returns invoice count, details, and current slot booking"""
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         token = request.auth
@@ -94,21 +92,19 @@ class MyInvoicesView(APIView):
             customer_id=customer_id
         ).select_related('customer', 'slot')
 
-        # check if customer has an active slot booking
-        active_slot = None
-        try:
-            booked = Slot.objects.get(booked_by_id=customer_id, status='booked')
-            active_slot = SlotSerializer(booked).data
-        except Slot.DoesNotExist:
-            pass
+        # customer can have multiple active booked slots now
+        booked_slots = Slot.objects.filter(
+            booked_by_id=customer_id,
+            status='booked'
+        )
 
+        
         return Response({
             'customer_code': token.get('customer_code'),
             'invoice_count': invoices.count(),
-            'active_slot': active_slot,
+            'active_slots': SlotSerializer(booked_slots, many=True).data,
             'invoices': InvoiceSerializer(invoices, many=True).data,
         })
-
 
 class AvailableSlotsView(APIView):
     """

@@ -1,4 +1,5 @@
-# billing/models.py
+# billing/models.py — complete file
+
 from django.db import models
 import uuid
 import random
@@ -11,17 +12,19 @@ class Slot(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
-    title = models.CharField(max_length=100)  # e.g. "Morning Session", "Table 3"
+    title = models.CharField(max_length=100)
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
-    booked_by = models.OneToOneField(
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='available'
+    )
+    booked_by = models.ForeignKey(
         'Customer',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='booked_slot'
+        related_name='booked_slots'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -33,12 +36,74 @@ class Slot(models.Model):
         return self.status == 'available' and self.booked_by is None
 
     def __str__(self):
-        return f"{self.title} | {self.date} {self.start_time}–{self.end_time} | {self.status}"
+        return (
+            f"{self.title} | {self.date} "
+            f"{self.start_time}–{self.end_time} | {self.status}"
+        )
+
+
+class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    ]
+
+    customer = models.ForeignKey(
+        'Customer',
+        on_delete=models.PROTECT,
+        related_name='bookings'
+    )
+    slot = models.ForeignKey(
+        Slot,
+        on_delete=models.PROTECT,
+        related_name='bookings'
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='confirmed'
+    )
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Booking #{self.id} — {self.customer} — {self.slot}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        if is_new:
+            if self.slot.status != 'available':
+                raise ValueError(
+                    f"Slot '{self.slot}' is not available. "
+                    f"Current status: {self.slot.status}"
+                )
+
+        super().save(*args, **kwargs)
+
+        # update slot based on booking status
+        if self.status == 'confirmed':
+            Slot.objects.filter(pk=self.slot.pk).update(
+                status='booked',
+                booked_by=self.customer
+            )
+        elif self.status in ['cancelled', 'completed']:
+            Slot.objects.filter(pk=self.slot.pk).update(
+                status='available',
+                booked_by=None
+            )
 
 
 class Customer(models.Model):
-    customer_code = models.CharField(max_length=20, unique=True, editable=False, blank=True)
-    access_pin = models.CharField(max_length=6, unique=True, editable=False, blank=True)
+    customer_code = models.CharField(
+        max_length=20, unique=True, editable=False, blank=True
+    )
+    access_pin = models.CharField(
+        max_length=6, unique=True, editable=False, blank=True
+    )
     name = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -103,55 +168,105 @@ class Customer(models.Model):
 
             card = Image.new('RGBA', (card_width, card_height), (255, 255, 255, 255))
             draw = ImageDraw.Draw(card)
-
             gold = (184, 134, 11)
             light_gold = (255, 215, 0)
 
-            draw.rectangle([0, 0, card_width - 1, card_height - 1], outline=gold, width=border)
-            draw.rectangle([border + 4, border + 4, card_width - border - 5, card_height - border - 5], outline=light_gold, width=2)
+            draw.rectangle(
+                [0, 0, card_width - 1, card_height - 1],
+                outline=gold, width=border
+            )
+            draw.rectangle(
+                [border + 4, border + 4,
+                 card_width - border - 5, card_height - border - 5],
+                outline=light_gold, width=2
+            )
 
             try:
-                font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-                font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-                font_pin_label = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
-                font_pin = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
+                font_large = ImageFont.truetype(
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22
+                )
+                font_medium = ImageFont.truetype(
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18
+                )
+                font_pin_label = ImageFont.truetype(
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13
+                )
+                font_pin = ImageFont.truetype(
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28
+                )
             except Exception:
-                font_large = font_medium = font_pin_label = font_pin = ImageFont.load_default()
+                font_large = font_medium = font_pin_label = font_pin = (
+                    ImageFont.load_default()
+                )
 
             tenant_name = schema.upper().replace('_', ' ')
             tenant_bbox = draw.textbbox((0, 0), tenant_name, font=font_large)
             tenant_w = tenant_bbox[2] - tenant_bbox[0]
-            draw.text(((card_width - tenant_w) // 2, border + 14), tenant_name, font=font_large, fill=gold)
-            draw.line([border + 10, header_height - 8, card_width - border - 10, header_height - 8], fill=light_gold, width=1)
+            draw.text(
+                ((card_width - tenant_w) // 2, border + 14),
+                tenant_name, font=font_large, fill=gold
+            )
+            draw.line(
+                [border + 10, header_height - 8,
+                 card_width - border - 10, header_height - 8],
+                fill=light_gold, width=1
+            )
 
-            card.paste(qr_img, ((card_width - qr_size) // 2, header_height + 10), qr_img)
+            card.paste(
+                qr_img,
+                ((card_width - qr_size) // 2, header_height + 10),
+                qr_img
+            )
 
             divider_y = header_height + qr_size + 20
-            draw.line([border + 10, divider_y, card_width - border - 10, divider_y], fill=light_gold, width=1)
+            draw.line(
+                [border + 10, divider_y,
+                 card_width - border - 10, divider_y],
+                fill=light_gold, width=1
+            )
 
             footer_y = divider_y + 12
             customer_name = self.name.upper()
             cn_bbox = draw.textbbox((0, 0), customer_name, font=font_medium)
-            draw.text(((card_width - (cn_bbox[2] - cn_bbox[0])) // 2, footer_y + 16), customer_name, font=font_medium, fill=(40, 40, 40))
+            draw.text(
+                ((card_width - (cn_bbox[2] - cn_bbox[0])) // 2, footer_y + 16),
+                customer_name, font=font_medium, fill=(40, 40, 40)
+            )
 
             pin_label = "ACCESS PIN"
             pl_bbox = draw.textbbox((0, 0), pin_label, font=font_pin_label)
-            draw.text(((card_width - (pl_bbox[2] - pl_bbox[0])) // 2, footer_y + 44), pin_label, font=font_pin_label, fill=(150, 150, 150))
+            draw.text(
+                ((card_width - (pl_bbox[2] - pl_bbox[0])) // 2, footer_y + 44),
+                pin_label, font=font_pin_label, fill=(150, 150, 150)
+            )
 
             spaced_pin = '  '.join(str(self.access_pin))
             sp_bbox = draw.textbbox((0, 0), spaced_pin, font=font_pin)
-            draw.text(((card_width - (sp_bbox[2] - sp_bbox[0])) // 2, footer_y + 60), spaced_pin, font=font_pin, fill=gold)
+            draw.text(
+                ((card_width - (sp_bbox[2] - sp_bbox[0])) // 2, footer_y + 60),
+                spaced_pin, font=font_pin, fill=gold
+            )
 
-            cc_bbox = draw.textbbox((0, 0), self.customer_code, font=font_pin_label)
-            draw.text(((card_width - (cc_bbox[2] - cc_bbox[0])) // 2, card_height - border - 22), self.customer_code, font=font_pin_label, fill=(180, 180, 180))
+            cc_bbox = draw.textbbox(
+                (0, 0), self.customer_code, font=font_pin_label
+            )
+            draw.text(
+                ((card_width - (cc_bbox[2] - cc_bbox[0])) // 2,
+                 card_height - border - 22),
+                self.customer_code, font=font_pin_label, fill=(180, 180, 180)
+            )
 
             final_buffer = BytesIO()
             card.convert('RGB').save(final_buffer, format='PNG', optimize=True)
             final_buffer.seek(0)
 
             filename = f"qr_{self.customer_code}.png"
-            self.qr_code.save(filename, ContentFile(final_buffer.getvalue()), save=False)
-            Customer.objects.filter(pk=self.pk).update(qr_code=self.qr_code.name)
+            self.qr_code.save(
+                filename, ContentFile(final_buffer.getvalue()), save=False
+            )
+            Customer.objects.filter(pk=self.pk).update(
+                qr_code=self.qr_code.name
+            )
 
         except Exception as e:
             import traceback
@@ -166,15 +281,41 @@ class Invoice(models.Model):
     customer = models.ForeignKey(
         Customer, on_delete=models.PROTECT, related_name='invoices'
     )
-    slot = models.OneToOneField(
+    slot = models.ForeignKey(
         Slot,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='invoice'
+        related_name='invoices'
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        # capture slot_id BEFORE super().save() in case it changes
+        slot_id = self.slot_id
+
+        super().save(*args, **kwargs)
+
+        # only trigger on new invoice creation, not edits
+        if is_new and slot_id:
+            from django.db import transaction
+
+            with transaction.atomic():
+                # 1. free the slot — use filter().update() to avoid
+                #    stale object issues with self.slot
+                Slot.objects.filter(pk=slot_id).update(
+                    status='available',
+                    booked_by=None
+                )
+
+                # 2. mark the booking as completed and remove it
+                Booking.objects.filter(
+                    slot_id=slot_id,
+                    status='confirmed'
+                ).update(status='completed')
 
     def __str__(self):
         return f"Invoice #{self.id} — {self.customer.name}"

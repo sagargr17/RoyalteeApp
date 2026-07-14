@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Client, Domain
 
+
+
 class CreateTenantView(APIView):
     def post(self, request):
         name = request.data['company_name']

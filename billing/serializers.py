@@ -23,11 +23,13 @@ class CustomerSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'customer_code', 'created_at']
 
 
+
+
 class InvoiceSerializer(serializers.ModelSerializer):
     customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
     customer_detail = CustomerSerializer(source='customer', read_only=True)
     slot = serializers.PrimaryKeyRelatedField(
-        queryset=Slot.objects.filter(status='available'),
+        queryset=Slot.objects.filter(status='booked'),
         allow_null=True,
         required=False
     )
@@ -47,19 +49,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Amount must be greater than zero.")
         return value
 
-    def validate_slot(self, slot):
-        if slot and not slot.is_available:
-            raise serializers.ValidationError("This slot is already booked or cancelled.")
-        return slot
-
-    def create(self, validated_data):
-        slot = validated_data.get('slot')
-        invoice = super().create(validated_data)
-
-        # mark slot as booked when invoice is created with a slot
-        if slot:
-            slot.status = 'booked'
-            slot.booked_by = validated_data['customer']
-            slot.save()
-
-        return invoice
+    def validate(self, data):
+        slot = data.get('slot')
+        customer = data.get('customer')
+        if slot and slot.booked_by != customer:
+            raise serializers.ValidationError(
+                "This slot is not booked by the selected customer."
+            )
+        return data
