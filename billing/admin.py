@@ -125,9 +125,9 @@ class BookingAdmin(TenantModelMixin):
     def slot_current_status(self, obj):
         if obj.pk:
             colors = {
-                'available': '#28a745',
-                'booked': '#fd7e14',
-                'cancelled': '#dc3545',
+                'available': "#28a7467c",
+                'booked': "#ffffcb",
+                'cancelled': "#711C25",
             }
             color = colors.get(obj.slot.status, 'grey')
             return format_html(
