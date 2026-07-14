@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "unfold.contrib.constance",  # optional, if django-constance package is used
     "unfold.contrib.hijack",  # optional, if django-hijack package is used
     'django_tenants',
+    "corsheaders",
     'tenants',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
 SHARED_APPS = [
     'django.contrib.auth',        
     'django_tenants',
+    'corsheaders',
     'tenants',
     'django.contrib.admin',       
     'django.contrib.contenttypes',
@@ -67,6 +69,7 @@ SHARED_APPS = [
 ]
 
 TENANT_APPS = [
+    'corsheaders',
     # apps that live INSIDE each tenant's schema
     'django.contrib.auth',     
     'rest_framework',
@@ -83,15 +86,13 @@ DATABASE_ROUTERS = (
 )
 
 
-
-
-
 MIDDLEWARE = [
     
     'django_tenants.middleware.main.TenantMainMiddleware',
     'tenants.middleware.HeaderTenantMiddleware',      
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -204,10 +205,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://*.localhost:8000',     
     'http://.localhost:8000',    
     'http://192.168.100.100:8000',   
-    
-    # "*"
-    
 ]
+
+
+
 
 import os
 
@@ -235,3 +236,12 @@ UNFOLD = {
 
 
 LOGIN_REDIRECT_URL = '/api/'
+
+CORS_ALLOWED_ORIGINS = [
+    "https://example.com",
+    "https://sub.example.com",
+    "http://localhost:8080",
+    "http://127.0.0.1:9000",
+    "http://127.0.0.1:5500"
+    
+]
