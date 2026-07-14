@@ -39,7 +39,7 @@ class ClientAdmin(ModelAdmin):
 
         if not change:
             Domain.objects.create(
-                domain=f"{obj.schema_name}.localhost",
+                domain=f"{obj.schema_name}.192.168.100.100",
                 tenant=obj,
                 is_primary=True,
             )

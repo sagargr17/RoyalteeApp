@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-94tc6dcq&_rdp*#)07%1r3ejh#)=gw47p=tu$7qqb@58ug)34^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+
+ALLOWED_HOSTS = ["192.168.100.100", "*"]
 
 # Application definition
 
@@ -127,7 +128,7 @@ DATABASES = {
         'NAME': 'royaltyapp',
         'USER': 'parth',
         'PASSWORD': 'parth@123',
-        'HOST': 'localhost',  # Or your remote database IP
+        'HOST': 'localhost', 
         'PORT': '5432'
     }
 }
@@ -202,9 +203,11 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://*.localhost:8000',     
     'http://.localhost:8000',    
+    'http://192.168.100.100:8000',   
+    
+    # "*"
+    
 ]
-
-
 
 import os
 
